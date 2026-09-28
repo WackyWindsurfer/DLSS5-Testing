@@ -94,6 +94,22 @@
   .card .meta .name { font-weight: 600; font-size: 14px; }
   .card .meta .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
   .card.source-card .meta .name { color: var(--warn); }
+  .card.failed-card { cursor: default; border-color: #5a3a3a; }
+  .card.failed-card:hover { transform: none; border-color: #7a4a4a; }
+  .thumb-failed {
+    display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(45deg, #1a1416, #1a1416 12px, #221a1c 12px, #221a1c 24px);
+  }
+  .not-valid { text-align: center; padding: 10px; }
+  .not-valid .nv-x {
+    display: block; font-size: 34px; color: #ff6b6b; line-height: 1.1;
+  }
+  .not-valid { font-size: 18px; font-weight: 800; letter-spacing: .06em; color: #ff6b6b; }
+  .not-valid .nv-why {
+    display: block; margin-top: 6px; font-size: 11.5px; font-weight: 400;
+    letter-spacing: 0; color: var(--muted);
+  }
+  .failed-pill { color: #ff6b6b; border-color: #5a3a3a; }
   .factor-pill {
     float: right; background: var(--panel2); border: 1px solid var(--border);
     color: var(--accent); border-radius: 8px; padding: 1px 9px; font-size: 13px; font-weight: 700;
@@ -343,10 +359,6 @@
       <div class="ghost-canvas-box"><canvas id="ghost-canvas" width="1080" height="1080"></canvas></div>
       <div class="ghost-side">
         <div class="g-item">
-          <label>Source</label>
-          <select id="ghost-source"></select>
-        </div>
-        <div class="g-item">
           <label>Base (bottom)</label>
           <select id="ghost-base"></select>
         </div>
@@ -439,7 +451,8 @@ const GROUPS = {
       { factor: 1,     file: "4mp DLSS5 1x defaults.mp4",     w: 2048, h: 2048, size: 16987608 },
       { factor: 1.5,   file: "4mp DLSS5 1.5x defaults.mp4",   w: 3072, h: 3072, size: 31658997 },
       { factor: 1.724, file: "4mp DLSS5 1.724x defaults.mp4", w: 3530, h: 3530, size: 35492702 },
-      { factor: 2,     file: "4mp DLSS5 2x defaults.mp4",     w: 4096, h: 4096, size: 48807089 },
+      { factor: 2,     file: "4mp DLSS5 2x defaults.mp4",     w: 4096, h: 4096, size: 48807089, failed: true },
+      { factor: 3,     file: null,                             w: 6144, h: 6144, size: null,     failed: true },
     ],
   },
 };
@@ -483,8 +496,19 @@ function switchTab(id) {
     cards.className = "cards";
     const mkCard = (v, isSrc) => {
       const c = document.createElement("div");
-      c.className = "card" + (isSrc ? " source-card" : "");
-      c.innerHTML = `
+      const isFailed = !isSrc && v.failed;
+      c.className = "card" + (isSrc ? " source-card" : "") + (isFailed ? " failed-card" : "");
+      c.innerHTML = isFailed
+        ? `
+        <div class="thumb thumb-failed">
+          <div class="not-valid"><span class="nv-x">✕</span>NOT VALID<span class="nv-why">output over DLSS5 limit</span></div>
+        </div>
+        <div class="meta">
+          <span class="factor-pill failed-pill">✕</span>
+          <div class="name">DLSS5 ${v.factor}× — not valid</div>
+          <div class="sub">${v.w}×${v.h} · over limit</div>
+        </div>`
+        : `
         <div class="thumb">
           <video src="${v.file}#t=0.1" preload="metadata" muted playsinline></video>
           <div class="play-ic"><span>▶</span></div>
@@ -494,7 +518,7 @@ function switchTab(id) {
           <div class="name">${isSrc ? "Source video" : "DLSS5 " + v.factor + "×"}</div>
           <div class="sub">${v.w}×${v.h} · ${fmtSize(v.size)}</div>
         </div>`;
-      c.addEventListener("click", () => openModal(v, isSrc, key));
+      if (!isFailed) c.addEventListener("click", () => openModal(v, isSrc, key));
       return c;
     };
     cards.appendChild(mkCard(g.source, true));
@@ -617,7 +641,8 @@ $("#cmp-swap").addEventListener("click", () => {
 function fillSelect(sel, groupKey, allowSource, selectedFile) {
   const g = GROUPS[groupKey];
   sel.innerHTML = "";
-  const items = allowSource ? [g.source, ...g.results] : g.results;
+  const results = g.results.filter((r) => !r.failed);
+  const items = allowSource ? [g.source, ...results] : results;
   items.forEach((v) => {
     const o = document.createElement("option");
     o.value = v.file;
@@ -629,7 +654,7 @@ function fillSelect(sel, groupKey, allowSource, selectedFile) {
 // Global list of ALL result videos across all source groups (for compare A/B)
 const ALL_RESULTS = [];
 for (const [key, g] of Object.entries(GROUPS)) {
-  g.results.forEach((r) => ALL_RESULTS.push(Object.assign({ group: key, label: g.label }, r)));
+  g.results.forEach((r) => { if (!r.failed) ALL_RESULTS.push(Object.assign({ group: key, label: g.label }, r)); });
 }
 function syncCompareSelectors() {
   const srcSel = $("#cmp-source");
@@ -719,7 +744,7 @@ const wipeTick = bindTransport(wipeEngine, $("#wipe-play"), $("#wipe-scrub"), $(
 const ALL_VIDEOS = [];
 for (const [key, g] of Object.entries(GROUPS)) {
   ALL_VIDEOS.push(Object.assign({ label: g.label + " source" }, g.source));
-  g.results.forEach((r) => ALL_VIDEOS.push(Object.assign({ label: g.label + " · " + r.factor + "×" }, r)));
+  g.results.forEach((r) => { if (!r.failed) ALL_VIDEOS.push(Object.assign({ label: g.label + " · " + r.factor + "×" }, r)); });
 }
 function syncWipeSelectors() {
   for (const id of ["#wipe-a", "#wipe-b"]) {
@@ -767,7 +792,7 @@ function loadWipe() {
 })();
 
 /* ================= GHOST ================= */
-const ghostState = { source: "1mp", base: null, top: null };
+const ghostState = { base: null, top: null };
 const ghostBaseV = document.createElement("video");
 const ghostTopV = document.createElement("video");
 [ghostBaseV, ghostTopV].forEach((v) => { v.preload = "auto"; v.playsInline = true; });
@@ -775,18 +800,26 @@ tabVideos.ghost = [ghostBaseV, ghostTopV];
 const ghostCanvas = $("#ghost-canvas"), gctx = ghostCanvas.getContext("2d");
 const ghostEngine = makeSyncEngine(() => [ghostBaseV, ghostTopV], (t) => { ghostTick(t); drawGhost(); });
 const ghostTick = bindTransport(ghostEngine, $("#ghost-play"), $("#ghost-scrub"), $("#ghost-time"), $("#ghost-loop"));
-function syncGhostSelectors() {
-  fillSelect($("#ghost-source"), ghostState.source, false, ghostState.source);
-  fillSelect($("#ghost-base"), ghostState.source, false, ghostState.base);
-  fillSelect($("#ghost-top"), ghostState.source, false, ghostState.top);
+// ALL selectable videos (sources + valid results) for the ghost base/top slots
+const GHOST_VIDEOS = [];
+for (const [key, g] of Object.entries(GROUPS)) {
+  GHOST_VIDEOS.push(Object.assign({ label: g.label + " source" }, g.source));
+  g.results.forEach((r) => { if (!r.failed) GHOST_VIDEOS.push(Object.assign({ label: g.label + " · " + r.factor + "×" }, r)); });
 }
-$("#ghost-source").addEventListener("change", (e) => {
-  ghostState.source = e.target.value;
-  const g = GROUPS[ghostState.source];
-  ghostState.base = g.results[0].file;
-  ghostState.top = g.results[Math.min(1, g.results.length - 1)].file;
-  syncGhostSelectors(); loadGhost();
-});
+function syncGhostSelectors() {
+  for (const id of ["#ghost-base", "#ghost-top"]) {
+    const sel = $(id);
+    sel.innerHTML = "";
+    for (const v of GHOST_VIDEOS) {
+      const o = document.createElement("option");
+      o.value = v.file;
+      o.textContent = v.label + " (" + v.w + "×" + v.h + ")";
+      sel.appendChild(o);
+    }
+  }
+  $("#ghost-base").value = ghostState.base;
+  $("#ghost-top").value = ghostState.top;
+}
 $("#ghost-base").addEventListener("change", (e) => { ghostState.base = e.target.value; loadGhost(); });
 $("#ghost-top").addEventListener("change", (e) => { ghostState.top = e.target.value; loadGhost(); });
 $("#ghost-swap").addEventListener("click", () => {
@@ -795,8 +828,7 @@ $("#ghost-swap").addEventListener("click", () => {
 });
 $("#ghost-op").addEventListener("input", drawGhost);
 function loadGhost() {
-  const g = GROUPS[ghostState.source];
-  const base = g.results.find((r) => r.file === ghostState.base), top = g.results.find((r) => r.file === ghostState.top);
+  const base = GHOST_VIDEOS.find((v) => v.file === ghostState.base), top = GHOST_VIDEOS.find((v) => v.file === ghostState.top);
   ghostBaseV.src = base.file; ghostTopV.src = top.file;
   ghostBaseV.currentTime = 0; ghostTopV.currentTime = 0;
   drawGhost();

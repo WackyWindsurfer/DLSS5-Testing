@@ -40,11 +40,18 @@ scene_change_threshold 0.24). **Only `upscaling_mode` varied.**
 |---|---|---|---|
 | 1mp | 1024×1024 | 1x, 1.5x, 1.724x, 2x, 3x | 1024 → 3072 |
 | 2mp | 1440×1440 | 1x, 1.5x, 1.724x, 2x, 3x | 1440 → 4320 |
-| 4mp | 2048×2048 | 1x, 1.5x, 1.724x, 2x | 2048 → 4096 |
+| 4mp | 2048×2048 | 1x, 1.5x, 1.724x, 2× & 3× (over limit) | 2048 → 3530 |
 
 **File naming convention:** `<mp> DLSS5 <factor>x defaults.mp4` — e.g.
 `2mp DLSS5 3x defaults.mp4` = the 2 MP source rendered with
 `upscaling_mode = 3x`. Source videos: `<mp> source.mp4`.
+
+> [!warning] Over-limit renders
+> The 4 MP source at 2× (4096×4096) and 3× (6144×6144) **exceed the
+> DLSS5 Enhancer's output-resolution limit** and did not produce valid
+> results. On the page they appear as **NOT VALID** placeholder cards in
+> the Overview, and are **excluded** from all compare/wipe/ghost
+> dropdowns.
 
 ## The four tabs
 
@@ -57,11 +64,14 @@ scene_change_threshold 0.24). **Only `upscaling_mode` varied.**
   output resolution, and file size.
 - **Click a card** → modal player with scrubber, speed control, loop, and
   fullscreen. "Use in 3-Way Compare" drops that render into slot A.
+- **NOT VALID placeholder cards** mark over-limit renders (4mp 2×, 4mp 3×)
+  — they are not playable and are excluded from every comparison dropdown.
 
 ### 2. 3-Way Compare (the main tool)
 - **Source dropdown:** the 3 source videos only (1mp / 2mp / 4mp).
-- **A and B dropdowns:** all 14 result videos across all groups, labeled
-  clearly, e.g. `2 MP · 3× (4320×4320)`.
+- **A and B dropdowns:** all 13 valid result videos across all groups
+  (broken/over-limit renders are excluded), labeled clearly, e.g.
+  `2 MP · 3× (4320×4320)`.
 - The three players are fully synchronized:
   - master play/pause + shared scrubber
   - frame-accurate stepping (±1 / ±10 frames)
@@ -75,16 +85,20 @@ scene_change_threshold 0.24). **Only `upscaling_mode` varied.**
 ### 3. A/B Wipe
 Two videos in one frame with a **draggable split line** (click anywhere on
 the frame, or drag the blue handle). A (left of the line) and B (right of
-the line) each offer **all 17 videos** — the 3 sources plus all 14 result
-renders — labeled clearly, e.g. `2 MP source (1440×1440)` or
-`2 MP · 3× (4320×4320)`. Best for spotting detail and structure differences.
+the line) each offer **all 16 selectable videos** — the 3 sources plus all
+13 valid result renders (broken/over-limit renders are excluded) — labeled
+clearly, e.g. `2 MP source (1440×1440)` or `2 MP · 3× (4320×4320)`. Best
+for spotting detail and structure differences.
 
 ![A/B Wipe tab](screenshot-ab-wipe.png)
 
 ### 4. Ghost Overlay
-Render A blended over render B on a canvas with an **opacity slider**
-(0–100%). Motion, ghosting, and structural differences show up as doubling.
-Swap base/ghost to invert.
+One video blended over another on a canvas with an **opacity slider**
+(0–100%). **No Source dropdown:** base (bottom) and ghost (top) each offer
+**all 16 selectable videos** — the 3 sources plus all 13 valid result
+renders (broken/over-limit renders are excluded) — labeled clearly, e.g.
+`2 MP source (1440×1440)` or `2 MP · 3× (4320×4320)`. Motion, ghosting,
+and structural differences show up as doubling. Swap base/ghost to invert.
 
 ## Keyboard shortcuts (compare / wipe / ghost tabs)
 
@@ -118,5 +132,5 @@ Swap base/ghost to invert.
 | `screenshot-3way-compare.png` | screenshot of the 3-Way Compare tab |
 | `screenshot-ab-wipe.png` | screenshot of the A/B Wipe tab |
 | `<mp> source.mp4` | the 3 source videos (1mp / 2mp / 4mp) |
-| `<mp> DLSS5 <factor>x defaults.mp4` | the 14 test result renders |
+| `<mp> DLSS5 <factor>x defaults.mp4` | the 13 valid test result renders (+ the broken 4mp 2x file) |
 | `README.md` | this manual |
