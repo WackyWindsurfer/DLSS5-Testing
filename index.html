@@ -315,8 +315,6 @@
   <section id="tab-wipe" class="tab">
     <h2>A/B Wipe <span class="muted small">— two renders in one frame, drag the split line to reveal differences</span></h2>
     <div class="controls-bar">
-      <label>Source</label>
-      <select id="wipe-source"></select>
       <label>Left (A)</label>
       <select id="wipe-a"></select>
       <label>Right (B)</label>
@@ -712,23 +710,31 @@ document.querySelectorAll("#cmp-players .vwrap").forEach((wrap) => {
 });
 
 /* ================= WIPE ================= */
-const wipeState = { source: "1mp", a: null, b: null };
+const wipeState = { a: null, b: null };
 const wipeV = [$("#wipe-va"), $("#wipe-vb")];
 tabVideos.wipe = wipeV;
 const wipeEngine = makeSyncEngine(() => wipeV, (t) => wipeTick(t));
 const wipeTick = bindTransport(wipeEngine, $("#wipe-play"), $("#wipe-scrub"), $("#wipe-time"), $("#wipe-loop"));
-function syncWipeSelectors() {
-  fillSelect($("#wipe-source"), wipeState.source, false, wipeState.source);
-  fillSelect($("#wipe-a"), wipeState.source, false, wipeState.a);
-  fillSelect($("#wipe-b"), wipeState.source, false, wipeState.b);
+// ALL videos (sources + results) for the wipe A/B slots
+const ALL_VIDEOS = [];
+for (const [key, g] of Object.entries(GROUPS)) {
+  ALL_VIDEOS.push(Object.assign({ label: g.label + " source" }, g.source));
+  g.results.forEach((r) => ALL_VIDEOS.push(Object.assign({ label: g.label + " · " + r.factor + "×" }, r)));
 }
-$("#wipe-source").addEventListener("change", (e) => {
-  wipeState.source = e.target.value;
-  const g = GROUPS[wipeState.source];
-  wipeState.a = g.results[0].file;
-  wipeState.b = g.results[Math.min(1, g.results.length - 1)].file;
-  syncWipeSelectors(); loadWipe();
-});
+function syncWipeSelectors() {
+  for (const id of ["#wipe-a", "#wipe-b"]) {
+    const sel = $(id);
+    sel.innerHTML = "";
+    for (const v of ALL_VIDEOS) {
+      const o = document.createElement("option");
+      o.value = v.file;
+      o.textContent = v.label + " (" + v.w + "×" + v.h + ")";
+      sel.appendChild(o);
+    }
+  }
+  $("#wipe-a").value = wipeState.a;
+  $("#wipe-b").value = wipeState.b;
+}
 $("#wipe-a").addEventListener("change", (e) => { wipeState.a = e.target.value; loadWipe(); });
 $("#wipe-b").addEventListener("change", (e) => { wipeState.b = e.target.value; loadWipe(); });
 $("#wipe-swap").addEventListener("click", () => {
@@ -736,12 +742,11 @@ $("#wipe-swap").addEventListener("click", () => {
   syncWipeSelectors(); loadWipe();
 });
 function loadWipe() {
-  const g = GROUPS[wipeState.source];
-  const a = g.results.find((r) => r.file === wipeState.a), b = g.results.find((r) => r.file === wipeState.b);
+  const a = ALL_VIDEOS.find((v) => v.file === wipeState.a), b = ALL_VIDEOS.find((v) => v.file === wipeState.b);
   wipeV[0].src = a.file; wipeV[1].src = b.file;
   wipeV.forEach((v) => v.currentTime = 0);
-  $("#wipe-la").textContent = "◂ " + a.factor + "×";
-  $("#wipe-lb").textContent = b.factor + "× ▸";
+  $("#wipe-la").textContent = "◂ " + a.label;
+  $("#wipe-lb").textContent = b.label + " ▸";
   wipeEngine.resync();
 }
 /* drag the split line */
@@ -841,8 +846,8 @@ document.addEventListener("keydown", (e) => {
   cmpState.a = GROUPS["1mp"].results[0].file;
   cmpState.b = GROUPS["1mp"].results[1].file;
   syncCompareSelectors(); loadCompare();
-  wipeState.a = GROUPS["1mp"].results[0].file;
-  wipeState.b = GROUPS["1mp"].results[1].file;
+  wipeState.a = ALL_VIDEOS[0].file;
+  wipeState.b = ALL_VIDEOS[1].file;
   syncWipeSelectors(); loadWipe();
   ghostState.base = GROUPS["1mp"].results[0].file;
   ghostState.top = GROUPS["1mp"].results[1].file;
