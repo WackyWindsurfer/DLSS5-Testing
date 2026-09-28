@@ -70,12 +70,16 @@ scene_change_threshold 0.24). **Only `upscaling_mode` varied.**
   three players — crank contrast to make subtle differences visible.
 - **Zoom lens:** hover over any player for a 2.4× magnifier.
 
+![3-Way Compare tab](screenshot-3way-compare.png)
+
 ### 3. A/B Wipe
 Two videos in one frame with a **draggable split line** (click anywhere on
 the frame, or drag the blue handle). A (left of the line) and B (right of
 the line) each offer **all 17 videos** — the 3 sources plus all 14 result
 renders — labeled clearly, e.g. `2 MP source (1440×1440)` or
 `2 MP · 3× (4320×4320)`. Best for spotting detail and structure differences.
+
+![A/B Wipe tab](screenshot-ab-wipe.png)
 
 ### 4. Ghost Overlay
 Render A blended over render B on a canvas with an **opacity slider**
@@ -111,6 +115,8 @@ Swap base/ghost to invert.
 | `krea2-source_.png` | the Krea2 reference image the sources were made from |
 | `DLSS5-Enhancer test setup.png` | the ComfyUI test workflow + settings screenshot |
 | `screenshot-overview.png` | screenshot of the page (Overview tab) |
+| `screenshot-3way-compare.png` | screenshot of the 3-Way Compare tab |
+| `screenshot-ab-wipe.png` | screenshot of the A/B Wipe tab |
 | `<mp> source.mp4` | the 3 source videos (1mp / 2mp / 4mp) |
 | `<mp> DLSS5 <factor>x defaults.mp4` | the 14 test result renders |
 | `README.md` | this manual |
