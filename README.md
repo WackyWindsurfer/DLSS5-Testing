@@ -7,6 +7,21 @@ provides interactive tools to compare them side by side.
 Everything in this folder (page, videos, images, this manual) is designed to
 live together; just copy or clone the folder and open `index.html`.
 
+## How to run
+
+1. **Download the repo as a ZIP** (GitHub → Code → Download ZIP) or
+   `git clone https://github.com/WackyWindsurfer/DLSS5-Testing.git`
+2. **Unpack / extract** the folder anywhere on your machine
+3. **Double-click `index.html`** — it opens directly in your browser.
+   No server, no installation, no internet connection required; the page
+   has zero external dependencies and references all videos/images by
+   relative path within the folder.
+
+The folder is fully portable — it also works from a USB stick or when
+shared as a zip.
+
+![Overview tab](screenshot-overview.png)
+
 ## What was tested
 
 Source videos are 1:1 square clips (24 fps, 5.17 s) generated from a Krea2
@@ -95,6 +110,7 @@ Swap base/ghost to invert.
 | `index.html` | the page (self-contained, inline CSS/JS) |
 | `krea2-source_.png` | the Krea2 reference image the sources were made from |
 | `DLSS5-Enhancer test setup.png` | the ComfyUI test workflow + settings screenshot |
+| `screenshot-overview.png` | screenshot of the page (Overview tab) |
 | `<mp> source.mp4` | the 3 source videos (1mp / 2mp / 4mp) |
 | `<mp> DLSS5 <factor>x defaults.mp4` | the 14 test result renders |
 | `README.md` | this manual |
