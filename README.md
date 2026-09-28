@@ -100,6 +100,8 @@ renders (broken/over-limit renders are excluded) — labeled clearly, e.g.
 `2 MP source (1440×1440)` or `2 MP · 3× (4320×4320)`. Motion, ghosting,
 and structural differences show up as doubling. Swap base/ghost to invert.
 
+![Ghost Overlay tab](screenshot-ghost-overlay.png)
+
 ## Keyboard shortcuts (compare / wipe / ghost tabs)
 
 | Key | Action |
@@ -131,6 +133,7 @@ and structural differences show up as doubling. Swap base/ghost to invert.
 | `screenshot-overview.png` | screenshot of the page (Overview tab) |
 | `screenshot-3way-compare.png` | screenshot of the 3-Way Compare tab |
 | `screenshot-ab-wipe.png` | screenshot of the A/B Wipe tab |
+| `screenshot-ghost-overlay.png` | screenshot of the Ghost Overlay tab |
 | `<mp> source.mp4` | the 3 source videos (1mp / 2mp / 4mp) |
 | `<mp> DLSS5 <factor>x defaults.mp4` | the 13 valid test result renders (+ the broken 4mp 2x file) |
 | `README.md` | this manual |
