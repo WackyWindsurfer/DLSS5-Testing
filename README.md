@@ -1,0 +1,97 @@
+# DLSS5 Enhancer — Test Overview & Comparison
+
+A self-contained HTML page that catalogs every DLSS5 Enhancer test render and
+provides interactive tools to compare them side by side.
+
+**Open `index.html` in any modern browser — no server, no dependencies.**
+Everything in this folder (page, videos, images, this manual) is designed to
+live together; just copy or clone the folder and open `index.html`.
+
+## What was tested
+
+Source videos are 1:1 square clips (24 fps, 5.17 s) generated from a Krea2
+reference image (`krea2-source_.png`). All renders used the same ComfyUI
+workflow (see `DLSS5-Enhancer test setup.png`):
+
+```
+Load Video → DLSS5 Settings → DLSS5 Enhance Images → Video Combine (h264, CRF 17, 24 fps)
+```
+
+All DLSS5 settings were left at **default** (nr preset/style Default,
+intensities 1.00, model preset M, motion auto, warmup 16,
+scene_change_threshold 0.24). **Only `upscaling_mode` varied.**
+
+| Source | Source res | upscaling_mode values | Output res range |
+|---|---|---|---|
+| 1mp | 1024×1024 | 1x, 1.5x, 1.724x, 2x, 3x | 1024 → 3072 |
+| 2mp | 1440×1440 | 1x, 1.5x, 1.724x, 2x, 3x | 1440 → 4320 |
+| 4mp | 2048×2048 | 1x, 1.5x, 1.724x, 2x | 2048 → 4096 |
+
+**File naming convention:** `<mp> DLSS5 <factor>x defaults.mp4` — e.g.
+`2mp DLSS5 3x defaults.mp4` = the 2 MP source rendered with
+`upscaling_mode = 3x`. Source videos: `<mp> source.mp4`.
+
+## The four tabs
+
+### 1. Overview
+- Reference image and workflow screenshot (click either to open the lightbox).
+- The full settings table used for all renders.
+- A grid of cards grouped by source resolution, sorted by upscaling factor
+  (low → high). Each card shows a live first-frame thumbnail, the factor,
+  output resolution, and file size.
+- **Click a card** → modal player with scrubber, speed control, loop, and
+  fullscreen. "Use in 3-Way Compare" drops that render into slot A.
+
+### 2. 3-Way Compare (the main tool)
+- **Source dropdown:** the 3 source videos only (1mp / 2mp / 4mp).
+- **A and B dropdowns:** all 14 result videos across all groups, labeled
+  clearly, e.g. `2 MP · 3× (4320×4320)`.
+- The three players are fully synchronized:
+  - master play/pause + shared scrubber
+  - frame-accurate stepping (±1 / ±10 frames)
+  - loop toggle, A/B swap, re-sync button (if a player drifts)
+- **Exaggeration controls** (brightness / contrast / saturation) applied to all
+  three players — crank contrast to make subtle differences visible.
+- **Zoom lens:** hover over any player for a 2.4× magnifier.
+
+### 3. A/B Wipe
+Two renders in one frame with a **draggable split line** (click anywhere on
+the frame, or drag the blue handle). Best for spotting detail and structure
+differences between two upscaling modes.
+
+### 4. Ghost Overlay
+Render A blended over render B on a canvas with an **opacity slider**
+(0–100%). Motion, ghosting, and structural differences show up as doubling.
+Swap base/ghost to invert.
+
+## Keyboard shortcuts (compare / wipe / ghost tabs)
+
+| Key | Action |
+|---|---|
+| `Space` | play / pause |
+| `←` / `→` | step 1 frame |
+| `Shift` + `←` / `→` | step 10 frames |
+| `L` | toggle loop |
+| `Esc` | close modal / lightbox |
+
+## Adding new renders
+
+1. Drop the new `.mp4` into this folder (keep the naming convention).
+2. Run `ffprobe` on it to get width/height/size:
+   ```
+   ffprobe -v error -select_streams v:0 -show_entries stream=width,height -show_entries format=size -of default=noprint_wrappers=1 "<file>.mp4"
+   ```
+3. Add an entry to the `GROUPS` object at the top of the `<script>` block in
+   `index.html` (factor, file, w, h, size). Entries are sorted
+   automatically, so just append.
+
+## Folder contents
+
+| File | What it is |
+|---|---|
+| `index.html` | the page (self-contained, inline CSS/JS) |
+| `krea2-source_.png` | the Krea2 reference image the sources were made from |
+| `DLSS5-Enhancer test setup.png` | the ComfyUI test workflow + settings screenshot |
+| `<mp> source.mp4` | the 3 source videos (1mp / 2mp / 4mp) |
+| `<mp> DLSS5 <factor>x defaults.mp4` | the 14 test result renders |
+| `README.md` | this manual |

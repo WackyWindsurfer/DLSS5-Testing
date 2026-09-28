@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DLSS5 Enhancer — Test Overview</title>
+<style>
+  :root {
+    --bg: #0e1015;
+    --panel: #161a22;
+    --panel2: #1d2230;
+    --border: #2a3140;
+    --text: #dfe4ee;
+    --muted: #8b94a7;
+    --accent: #4da3ff;
+    --accent2: #39d98a;
+    --warn: #ffb454;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 15px;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 0 0 10px; color: var(--accent); }
+  h3 { font-size: 14px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12.5px; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 16px 20px 60px; }
+
+  /* ---------- header ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(14,16,21,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner { max-width: 1400px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .header-inner .title-block { flex: 1 1 auto; }
+  nav.tabs { display: flex; gap: 6px; }
+  nav.tabs button {
+    background: var(--panel); color: var(--muted); border: 1px solid var(--border);
+    padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  nav.tabs button.active { background: var(--accent); border-color: var(--accent); color: #0b0f16; font-weight: 600; }
+  nav.tabs button:hover:not(.active) { color: var(--text); }
+
+  .header-media { display: flex; gap: 10px; margin: 14px 0 6px; }
+  .header-media figure { margin: 0; position: relative; }
+  .header-media img {
+    width: 300px; max-width: 40vw; height: 170px; object-fit: cover;
+    border: 1px solid var(--border); border-radius: var(--radius); cursor: zoom-in; display: block;
+  }
+  .header-media figcaption { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+  /* ---------- settings table ---------- */
+  .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 14px 0 26px; }
+  .settings-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .settings-card table { width: 100%; border-collapse: collapse; }
+  .settings-card td { padding: 3px 6px; font-size: 13px; border-bottom: 1px solid rgba(42,49,64,.5); }
+  .settings-card td:first-child { color: var(--muted); width: 55%; }
+  .settings-card tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2px 10px; font-size: 12px; color: var(--accent2);
+  }
+
+  /* ---------- overview grid ---------- */
+  .group { margin-bottom: 30px; }
+  .group-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .group-head .res { color: var(--accent2); font-size: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; cursor: pointer; transition: transform .12s, border-color .12s;
+  }
+  .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .card .thumb { position: relative; width: 100%; aspect-ratio: 1/1; background: #000; }
+  .card .thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .play-ic {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.25); opacity: 0; transition: opacity .15s; pointer-events: none;
+  }
+  .card:hover .play-ic { opacity: 1; }
+  .card .play-ic span {
+    width: 46px; height: 46px; border-radius: 50%; background: rgba(77,163,255,.9);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; color: #0b0f16;
+  }
+  .card .meta { padding: 9px 12px; }
+  .card .meta .name { font-weight: 600; font-size: 14px; }
+  .card .meta .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .card.source-card .meta .name { color: var(--warn); }
+  .factor-pill {
+    float: right; background: var(--panel2); border: 1px solid var(--border);
+    color: var(--accent); border-radius: 8px; padding: 1px 9px; font-size: 13px; font-weight: 700;
+  }
+
+  /* ---------- compare / transport ---------- */
+  .controls-bar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 14px; margin-bottom: 12px;
+  }
+  .controls-bar label { color: var(--muted); font-size: 13px; }
+  select, .btn {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 13.5px; cursor: pointer;
+  }
+  select:focus, .btn:focus { outline: 1px solid var(--accent); }
+  .btn.primary { background: var(--accent); color: #0b0f16; font-weight: 700; border-color: var(--accent); }
+  .btn:hover:not(.primary) { border-color: var(--accent); }
+  .scrub-wrap { flex: 1 1 260px; display: flex; align-items: center; gap: 10px; min-width: 240px; }
+  input[type=range] { accent-color: var(--accent); }
+  .timecode { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; min-width: 74px; }
+  .players { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 980px) { .players { grid-template-columns: 1fr; } }
+  .player {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; position: relative;
+  }
+  .player .p-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; }
+  .player .p-head .p-name { font-weight: 700; font-size: 14px; }
+  .player .p-head .p-name.src { color: var(--warn); }
+  .player .p-head .p-name.a { color: var(--accent); }
+  .player .p-head .p-name.b { color: var(--accent2); }
+  .player .p-stats { color: var(--muted); font-size: 12px; }
+  .player .vwrap { position: relative; background: #000; aspect-ratio: 1/1; }
+  .player video { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .player .lens {
+    position: absolute; width: 220px; height: 220px; border-radius: 50%;
+    border: 2px solid var(--accent); box-shadow: 0 4px 24px rgba(0,0,0,.6);
+    display: none; pointer-events: none; z-index: 5;
+  }
+  .exag-bar {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 14px; margin-top: 12px;
+  }
+  .exag-bar .ex-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .exag-bar input[type=range] { width: 130px; }
+  .exag-bar .ex-val { min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 10px; }
+  kbd {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
+    padding: 0 6px; font-size: 11.5px; font-family: inherit;
+  }
+
+  /* ---------- wipe ---------- */
+  .wipe-wrap { position: relative; background: #000; aspect-ratio: 1/1; max-width: 860px; margin: 0 auto; user-select: none; touch-action: none; }
+  .wipe-wrap video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .wipe-top { clip-path: inset(0 0 0 50%); }
+  .wipe-line { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--accent); left: 50%; transform: translateX(-50%); z-index: 4; cursor: ew-resize; }
+  .wipe-line::after {
+    content: "◂ ▸"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    background: var(--accent); color: #0b0f16; font-weight: 700; font-size: 12px;
+    border-radius: 20px; padding: 6px 8px; white-space: nowrap;
+  }
+  .wipe-labels { position: absolute; top: 10px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 14px; z-index: 6; pointer-events: none; }
+  .wipe-labels span { background: rgba(0,0,0,.55); border-radius: 6px; padding: 3px 10px; font-size: 13px; font-weight: 700; }
+
+  /* ---------- ghost ---------- */
+  .ghost-wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: center; }
+  .ghost-canvas-box { background: #000; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; max-width: 100%; }
+  .ghost-canvas-box canvas { display: block; width: min(680px, 92vw); height: auto; }
+  .ghost-side { width: 260px; }
+  .ghost-side .g-item { margin-bottom: 14px; }
+  .ghost-side label { color: var(--muted); font-size: 13px; display: block; margin-bottom: 4px; }
+
+  /* ---------- modal / lightbox ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(5,7,10,.88); z-index: 100;
+    display: none; align-items: center; justify-content: center; flex-direction: column; padding: 24px;
+  }
+  .overlay.open { display: flex; }
+  .modal-box { max-width: min(1100px, 94vw); width: 100%; }
+  .modal-box video, .lightbox-box img {
+    width: 100%; max-height: 72vh; border-radius: var(--radius); border: 1px solid var(--border);
+    background: #000; display: block;
+  }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+  .modal-head .m-name { font-size: 16px; font-weight: 700; }
+  .modal-transport { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .close-x {
+    position: absolute; top: 14px; right: 18px; background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; font-size: 18px; cursor: pointer; padding: 4px 10px;
+  }
+  .lightbox-box { position: relative; max-width: min(1200px, 94vw); }
+  .lightbox-box img { max-height: 82vh; object-fit: contain; width: auto; max-width: 100%; }
+  .lightbox-cap { color: var(--muted); margin-top: 10px; text-align: center; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+  .kv { color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="header-inner">
+    <div class="title-block">
+      <h1>DLSS5 Enhancer — Test Overview</h1>
+      <div class="kv">Krea2 source → 1 / 2 / 4 MP 1:1 source videos · 24 fps · 5.17 s · all other settings at default · only <b>upscaling_mode</b> varied</div>
+    </div>
+    <nav class="tabs">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="compare">3-Way Compare</button>
+      <button data-tab="wipe">A/B Wipe</button>
+      <button data-tab="ghost">Ghost Overlay</button>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ================= OVERVIEW ================= -->
+  <section id="tab-overview" class="tab active">
+    <div class="header-media">
+      <figure>
+        <img src="krea2-source_.png" alt="Reference image" data-lightbox="krea2-source_.png" data-cap="Reference image (Krea2) used to create the source videos">
+        <figcaption>Reference image (Krea2)</figcaption>
+      </figure>
+      <figure>
+        <img src="DLSS5-Enhancer%20test%20setup.png" alt="Workflow" data-lightbox="DLSS5-Enhancer%20test%20setup.png" data-cap="ComfyUI test workflow: Load Video → DLSS5 Settings → DLSS5 Enhance Images → Video Combine">
+        <figcaption>Test workflow (ComfyUI)</figcaption>
+      </figure>
+    </div>
+
+    <h2>Test settings (identical for all renders)</h2>
+    <div class="settings-grid">
+      <div class="settings-card">
+        <h3>DLSS5 Settings node</h3>
+        <table>
+          <tr><td>upscaling_mode</td><td><span class="badge">varies: 1x / 1.5x / 1.724x / 2x / 3x / 4x</span></td></tr>
+          <tr><td>nr_preset / nr_style</td><td>Default / Default</td></tr>
+          <tr><td>nr_intensity</td><td>1.00</td></tr>
+          <tr><td>local_tone_strength</td><td>1.00</td></tr>
+          <tr><td>local_structure_strength</td><td>1.00</td></tr>
+          <tr><td>skin_structure_strength</td><td>1.00</td></tr>
+          <tr><td>automatic_mask</td><td>true</td></tr>
+          <tr><td>dlss_model_preset</td><td>M</td></tr>
+          <tr><td>motion</td><td>auto</td></tr>
+          <tr><td>scene_change_threshold</td><td>0.24</td></tr>
+          <tr><td>warmup_frames</td><td>16</td></tr>
+        </table>
+      </div>
+      <div class="settings-card">
+        <h3>Pipeline</h3>
+        <table>
+          <tr><td>Load Video</td><td>force_rate 24, frame_load_cap 124, format H3</td></tr>
+          <tr><td>DLSS5 Enhance Images</td><td>verify_neural_rendering = true</td></tr>
+          <tr><td>Video Combine</td><td>24 fps, h264-mp4, yuv420p, CRF 17</td></tr>
+          <tr><td>Enhance Video File</td><td>HEVC / MKV, quality Auto, copy_audio = true</td></tr>
+          <tr><td>Enhancer binary</td><td>DLSS.5.Visual.Enhancer.v3.0</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h2>Results <span class="muted small">— grouped by source resolution, sorted by upscaling factor (low → high). Click a card to play.</span></h2>
+    <div id="overview-groups"></div>
+  </section>
+
+  <!-- ================= 3-WAY COMPARE ================= -->
+  <section id="tab-compare" class="tab">
+    <h2>3-Way Compare <span class="muted small">— source + two result renders, fully synchronized</span></h2>
+    <div class="controls-bar">
+      <label>Source</label>
+      <select id="cmp-source"></select>
+      <label>A</label>
+      <select id="cmp-a"></select>
+      <label>B</label>
+      <select id="cmp-b"></select>
+      <button class="btn" id="cmp-swap" title="Swap A and B">⇄ Swap</button>
+      <button class="btn" id="cmp-resync" title="Re-align all players to the same frame">⚡ Re-sync</button>
+    </div>
+    <div class="controls-bar">
+      <button class="btn primary" id="cmp-play">▶ Play</button>
+      <button class="btn" id="cmp-step-back" title="Step back 1 frame (←)">−1 f</button>
+      <button class="btn" id="cmp-step-fwd" title="Step forward 1 frame (→)">+1 f</button>
+      <button class="btn" id="cmp-loop" title="Toggle loop (L)">🔁 Loop: off</button>
+      <div class="scrub-wrap">
+        <span class="timecode" id="cmp-time">00:00.000</span>
+        <input type="range" id="cmp-scrub" min="0" max="1000" value="0" step="1">
+      </div>
+    </div>
+    <div class="players" id="cmp-players">
+      <div class="player">
+        <div class="p-head"><span class="p-name src" id="cmp-p0-name">Source</span><span class="p-stats" id="cmp-p0-stats"></span></div>
+        <div class="vwrap" data-pidx="0"><video id="cmp-v0" preload="auto" playsinline></video><canvas class="lens" width="220" height="220"></canvas></div>
+      </div>
+      <div class="player">
+        <div class="p-head"><span class="p-name a" id="cmp-p1-name">A</span><span class="p-stats" id="cmp-p1-stats"></span></div>
+        <div class="vwrap" data-pidx="1"><video id="cmp-v1" preload="auto" playsinline></video><canvas class="lens" width="220" height="220"></canvas></div>
+      </div>
+      <div class="player">
+        <div class="p-head"><span class="p-name b" id="cmp-p2-name">B</span><span class="p-stats" id="cmp-p2-stats"></span></div>
+        <div class="vwrap" data-pidx="2"><video id="cmp-v2" preload="auto" playsinline></video><canvas class="lens" width="220" height="220"></canvas></div>
+      </div>
+    </div>
+    <div class="exag-bar">
+      <span class="kv">Exaggerate differences (applies to all three):</span>
+      <div class="ex-item"><label>Brightness</label><input type="range" id="ex-bright" min="50" max="200" value="100"><span class="ex-val" id="ex-bright-v">1.0</span></div>
+      <div class="ex-item"><label>Contrast</label><input type="range" id="ex-contrast" min="50" max="300" value="100"><span class="ex-val" id="ex-contrast-v">1.0</span></div>
+      <div class="ex-item"><label>Saturation</label><input type="range" id="ex-sat" min="0" max="400" value="100"><span class="ex-val" id="ex-sat-v">1.0</span></div>
+      <button class="btn" id="ex-reset">Reset</button>
+    </div>
+    <div class="hint">
+      <kbd>Space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> step 1 frame · <kbd>Shift</kbd>+<kbd>←/→</kbd> step 10 · <kbd>L</kbd> loop · hover a video for the zoom lens
+    </div>
+  </section>
+
+  <!-- ================= WIPE ================= -->
+  <section id="tab-wipe" class="tab">
+    <h2>A/B Wipe <span class="muted small">— two renders in one frame, drag the split line to reveal differences</span></h2>
+    <div class="controls-bar">
+      <label>Source</label>
+      <select id="wipe-source"></select>
+      <label>Left (A)</label>
+      <select id="wipe-a"></select>
+      <label>Right (B)</label>
+      <select id="wipe-b"></select>
+      <button class="btn" id="wipe-swap">⇄ Swap</button>
+      <button class="btn primary" id="wipe-play">▶ Play</button>
+      <button class="btn" id="wipe-loop">🔁 Loop: off</button>
+      <div class="scrub-wrap">
+        <span class="timecode" id="wipe-time">00:00.000</span>
+        <input type="range" id="wipe-scrub" min="0" max="1000" value="0" step="1">
+      </div>
+    </div>
+    <div class="wipe-wrap" id="wipe-wrap">
+      <video id="wipe-vb" preload="auto" playsinline></video>
+      <video id="wipe-va" class="wipe-top" preload="auto" playsinline></video>
+      <div class="wipe-line" id="wipe-line"></div>
+      <div class="wipe-labels"><span id="wipe-la" class="a" style="color:var(--accent)"></span><span id="wipe-lb" style="color:var(--accent2)"></span></div>
+    </div>
+    <div class="hint">Drag the blue line (or click anywhere on the frame) to move the split. <kbd>Space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> step frame</div>
+  </section>
+
+  <!-- ================= GHOST ================= -->
+  <section id="tab-ghost" class="tab">
+    <h2>Ghost Overlay <span class="muted small">— blend render A over render B; motion/ghosting and structural differences show as doubling</span></h2>
+    <div class="ghost-wrap">
+      <div class="ghost-canvas-box"><canvas id="ghost-canvas" width="1080" height="1080"></canvas></div>
+      <div class="ghost-side">
+        <div class="g-item">
+          <label>Source</label>
+          <select id="ghost-source"></select>
+        </div>
+        <div class="g-item">
+          <label>Base (bottom)</label>
+          <select id="ghost-base"></select>
+        </div>
+        <div class="g-item">
+          <label>Ghost (top)</label>
+          <select id="ghost-top"></select>
+        </div>
+        <div class="g-item">
+          <label>Ghost opacity: <span id="ghost-op-v" style="color:var(--text)">0.5</span></label>
+          <input type="range" id="ghost-op" min="0" max="100" value="50" style="width:100%">
+        </div>
+        <div class="g-item">
+          <button class="btn" id="ghost-swap">⇄ Swap base/ghost</button>
+        </div>
+        <div class="g-item">
+          <button class="btn primary" id="ghost-play">▶ Play</button>
+          <button class="btn" id="ghost-loop" style="margin-top:8px">🔁 Loop: off</button>
+        </div>
+        <div class="g-item">
+          <div class="scrub-wrap" style="min-width:0">
+            <span class="timecode" id="ghost-time">00:00.000</span>
+            <input type="range" id="ghost-scrub" min="0" max="1000" value="0" step="1" style="flex:1">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hint">Both renders play in sync; the top one is blended at the chosen opacity. <kbd>Space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> step frame</div>
+  </section>
+
+</div>
+
+<!-- ================= MODAL PLAYER ================= -->
+<div class="overlay" id="modal">
+  <div class="modal-box" style="position:relative">
+    <button class="close-x" id="modal-close">✕</button>
+    <div class="modal-head">
+      <span class="m-name" id="modal-name"></span>
+      <span class="kv" id="modal-stats"></span>
+    </div>
+    <video id="modal-video" controls playsinline></video>
+    <div class="modal-transport">
+      <button class="btn" id="modal-speed">Speed: 1×</button>
+      <button class="btn" id="modal-loop">🔁 Loop: off</button>
+      <button class="btn" id="modal-full">⛶ Fullscreen</button>
+      <button class="btn primary" id="modal-compare">⇄ Use in 3-Way Compare</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= LIGHTBOX ================= -->
+<div class="overlay" id="lightbox">
+  <div class="lightbox-box" style="position:relative">
+    <button class="close-x" id="lightbox-close">✕</button>
+    <img id="lightbox-img" src="" alt="">
+    <div class="lightbox-cap" id="lightbox-cap"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= DATA (from ffprobe) ================= */
+const DURATION = 5.166667, FPS = 24;
+const GROUPS = {
+  "1mp": {
+    label: "1 MP",
+    source: { file: "1mp source.mp4", w: 1024, h: 1024, size: 7812226 },
+    results: [
+      { factor: 1,     file: "1mp DLSS5 1x defaults.mp4",     w: 1024, h: 1024, size: 5352049 },
+      { factor: 1.5,   file: "1mp DLSS5 1.5x defaults.mp4",   w: 1536, h: 1536, size: 9911963 },
+      { factor: 1.724, file: "1mp DLSS5 1.724x defaults.mp4", w: 1766, h: 1766, size: 12038614 },
+      { factor: 2,     file: "1mp DLSS5 2x defaults.mp4",     w: 2048, h: 2048, size: 14652004 },
+      { factor: 3,     file: "1mp DLSS5 3x defaults.mp4",     w: 3072, h: 3072, size: 29293661 },
+    ],
+  },
+  "2mp": {
+    label: "2 MP",
+    source: { file: "2mp source.mp4", w: 1440, h: 1440, size: 9492185 },
+    results: [
+      { factor: 1,     file: "2mp DLSS5 1x defaults.mp4",     w: 1440, h: 1440, size: 8871515 },
+      { factor: 1.5,   file: "2mp DLSS5 1.5x defaults.mp4",   w: 2160, h: 2160, size: 16269977 },
+      { factor: 1.724, file: "2mp DLSS5 1.724x defaults.mp4", w: 2482, h: 2482, size: 20324818 },
+      { factor: 2,     file: "2mp DLSS5 2x defaults.mp4",     w: 2880, h: 2880, size: 25024376 },
+      { factor: 3,     file: "2mp DLSS5 3x defaults.mp4",     w: 4320, h: 4320, size: 49890252 },
+    ],
+  },
+  "4mp": {
+    label: "4 MP",
+    source: { file: "4mp source.mp4", w: 2048, h: 2048, size: 23935826 },
+    results: [
+      { factor: 1,     file: "4mp DLSS5 1x defaults.mp4",     w: 2048, h: 2048, size: 16987608 },
+      { factor: 1.5,   file: "4mp DLSS5 1.5x defaults.mp4",   w: 3072, h: 3072, size: 31658997 },
+      { factor: 1.724, file: "4mp DLSS5 1.724x defaults.mp4", w: 3530, h: 3530, size: 35492702 },
+      { factor: 2,     file: "4mp DLSS5 2x defaults.mp4",     w: 4096, h: 4096, size: 48807089 },
+    ],
+  },
+};
+for (const g of Object.values(GROUPS)) g.results.sort((a, b) => a.factor - b.factor);
+
+/* ================= HELPERS ================= */
+const $ = (s) => document.querySelector(s);
+const fmtSize = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : (b / 1024).toFixed(0) + " kB";
+const fmtKBps = (b) => Math.round(b / DURATION / 128) + " kbps";
+const fmtTime = (t) => {
+  const m = Math.floor(t / 60), s = t - m * 60;
+  return String(m).padStart(2, "0") + ":" + s.toFixed(3).padStart(6, "0");
+};
+const statsOf = (v) => `${v.w}×${v.h} · ${fmtKBps(v.size)} · ${fmtSize(v.size)}`;
+const nameOf = (v, isSrc) => isSrc ? "Source" : v.factor + "×";
+const groupOfFile = (f) => Object.keys(GROUPS).find((g) => GROUPS[g].source.file === f || GROUPS[g].results.some((r) => r.file === f));
+
+/* ================= TABS ================= */
+const tabVideos = { compare: [], wipe: [], ghost: [] };
+document.querySelectorAll("nav.tabs button").forEach((btn) => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+});
+function switchTab(id) {
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === id));
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === "tab-" + id));
+  for (const [k, list] of Object.entries(tabVideos)) {
+    if (k !== id) list.forEach((v) => { v.pause(); });
+  }
+}
+
+/* ================= OVERVIEW GRID ================= */
+(function buildOverview() {
+  const root = $("#overview-groups");
+  for (const [key, g] of Object.entries(GROUPS)) {
+    const sec = document.createElement("div");
+    sec.className = "group";
+    sec.innerHTML = `<div class="group-head"><h2 style="margin:0">${g.label} source</h2>
+      <span class="res">${g.source.w}×${g.source.h}</span>
+      <span class="kv">${g.results.length} result renders + source</span></div>`;
+    const cards = document.createElement("div");
+    cards.className = "cards";
+    const mkCard = (v, isSrc) => {
+      const c = document.createElement("div");
+      c.className = "card" + (isSrc ? " source-card" : "");
+      c.innerHTML = `
+        <div class="thumb">
+          <video src="${v.file}#t=0.1" preload="metadata" muted playsinline></video>
+          <div class="play-ic"><span>▶</span></div>
+        </div>
+        <div class="meta">
+          <span class="factor-pill">${isSrc ? "SRC" : v.factor + "×"}</span>
+          <div class="name">${isSrc ? "Source video" : "DLSS5 " + v.factor + "×"}</div>
+          <div class="sub">${v.w}×${v.h} · ${fmtSize(v.size)}</div>
+        </div>`;
+      c.addEventListener("click", () => openModal(v, isSrc, key));
+      return c;
+    };
+    cards.appendChild(mkCard(g.source, true));
+    g.results.forEach((r) => cards.appendChild(mkCard(r, false)));
+    sec.appendChild(cards);
+    root.appendChild(sec);
+  }
+})();
+
+/* ================= MODAL ================= */
+const modal = $("#modal"), modalVideo = $("#modal-video");
+let modalData = null;
+const speeds = [1, 1.5, 2, 0.5];
+function openModal(v, isSrc, groupKey) {
+  modalData = { v, isSrc, groupKey };
+  modalVideo.src = v.file;
+  modalVideo.currentTime = 0;
+  $("#modal-name").textContent = (isSrc ? "Source — " : "DLSS5 ") + (isSrc ? groupKey : v.factor + "×") + " · " + groupKey + " group";
+  $("#modal-stats").textContent = statsOf(v);
+  modal.classList.add("open");
+  modalVideo.play().catch(() => {});
+}
+function closeModal() { modal.classList.remove("open"); modalVideo.pause(); modalVideo.removeAttribute("src"); modalVideo.load(); }
+$("#modal-close").addEventListener("click", closeModal);
+modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+$("#modal-speed").addEventListener("click", (e) => {
+  const i = (speeds.indexOf(modalVideo.playbackRate) + 1) % speeds.length;
+  modalVideo.playbackRate = speeds[i];
+  e.currentTarget.textContent = "Speed: " + speeds[i] + "×";
+});
+$("#modal-loop").addEventListener("click", (e) => {
+  modalVideo.loop = !modalVideo.loop;
+  e.currentTarget.textContent = "🔁 Loop: " + (modalVideo.loop ? "on" : "off");
+});
+$("#modal-full").addEventListener("click", () => modalVideo.requestFullscreen?.());
+$("#modal-compare").addEventListener("click", () => {
+  if (!modalData) return;
+  const g = modalData.groupKey, r = modalData.v;
+  // source video can't be an A/B slot — leave the modal open
+  if (!GROUPS[g].results.some((x) => x.file === r.file)) return;
+  cmpState.source = g;
+  cmpState.a = r.file;
+  cmpState.b = GROUPS[g].results[Math.min(1, GROUPS[g].results.length - 1)].file;
+  if (cmpState.a === cmpState.b) cmpState.b = GROUPS[g].results[0].file;
+  syncCompareSelectors(); loadCompare();
+  closeModal();
+  switchTab("compare");
+});
+
+/* ================= LIGHTBOX ================= */
+const lightbox = $("#lightbox");
+document.querySelectorAll("[data-lightbox]").forEach((img) => {
+  img.addEventListener("click", () => {
+    $("#lightbox-img").src = img.dataset.lightbox;
+    $("#lightbox-cap").textContent = img.dataset.cap;
+    lightbox.classList.add("open");
+  });
+});
+$("#lightbox-close").addEventListener("click", () => lightbox.classList.remove("open"));
+lightbox.addEventListener("click", (e) => { if (e.target === lightbox) lightbox.classList.remove("open"); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { lightbox.classList.remove("open"); if (modal.classList.contains("open")) closeModal(); }
+});
+
+/* ================= SYNC ENGINE (shared by compare/wipe/ghost) ================= */
+function makeSyncEngine(getPlayers, onTick) {
+  let playing = false, loop = false;
+  const engine = {
+    set playing(p) {
+      playing = p;
+      getPlayers().forEach((v) => p ? v.play().catch(() => {}) : v.pause());
+    },
+    get playing() { return playing; },
+    set loop(l) { loop = l; },
+    get loop() { return loop; },
+    seek(t) { getPlayers().forEach((v) => { v.currentTime = t; }); },
+    step(n) {
+      const ps = getPlayers();
+      this.playing = false;
+      const leader = ps[0];
+      const t = Math.min(DURATION, Math.max(0, Math.round(leader.currentTime * FPS) / FPS + n / FPS));
+      this.seek(t);
+    },
+    resync() { const t = getPlayers()[0].currentTime; this.seek(t); },
+  };
+  getPlayers()[0]?.addEventListener("timeupdate", () => {
+    const leader = getPlayers()[0];
+    getPlayers().slice(1).forEach((v) => {
+      if (Math.abs(v.currentTime - leader.currentTime) > 0.09) v.currentTime = leader.currentTime;
+    });
+    onTick && onTick(leader.currentTime);
+  });
+  getPlayers()[0]?.addEventListener("ended", () => {
+    if (loop) { engine.seek(0); engine.playing = true; }
+  });
+  return engine;
+}
+function bindTransport(engine, playBtn, scrub, timeEl, loopBtn) {
+  let scrubbing = false;
+  playBtn.addEventListener("click", () => { engine.playing = !engine.playing; playBtn.textContent = engine.playing ? "⏸ Pause" : "▶ Play"; });
+  scrub.addEventListener("input", () => { scrubbing = true; engine.seek(scrub.value / 1000 * DURATION); timeEl.textContent = fmtTime(scrub.value / 1000 * DURATION); });
+  scrub.addEventListener("change", () => scrubbing = false);
+  if (loopBtn) loopBtn.addEventListener("click", () => { engine.loop = !engine.loop; loopBtn.textContent = "🔁 Loop: " + (engine.loop ? "on" : "off"); });
+  return (t) => { if (!scrubbing) scrub.value = t / DURATION * 1000; timeEl.textContent = fmtTime(t); };
+}
+
+/* ================= 3-WAY COMPARE ================= */
+const cmpState = { source: "1mp", a: null, b: null };
+const cmpV = [$("#cmp-v0"), $("#cmp-v1"), $("#cmp-v2")];
+tabVideos.compare = cmpV;
+const cmpEngine = makeSyncEngine(() => cmpV, (t) => cmpTick(t));
+const cmpTick = bindTransport(cmpEngine, $("#cmp-play"), $("#cmp-scrub"), $("#cmp-time"), $("#cmp-loop"));
+$("#cmp-step-back").addEventListener("click", () => cmpEngine.step(-1));
+$("#cmp-step-fwd").addEventListener("click", () => cmpEngine.step(1));
+$("#cmp-resync").addEventListener("click", () => cmpEngine.resync());
+$("#cmp-swap").addEventListener("click", () => {
+  const t = cmpState.a; cmpState.a = cmpState.b; cmpState.b = t;
+  syncCompareSelectors(); loadCompare();
+});
+function fillSelect(sel, groupKey, allowSource, selectedFile) {
+  const g = GROUPS[groupKey];
+  sel.innerHTML = "";
+  const items = allowSource ? [g.source, ...g.results] : g.results;
+  items.forEach((v) => {
+    const o = document.createElement("option");
+    o.value = v.file;
+    o.textContent = (allowSource ? "Source " : "") + (allowSource ? "" : v.factor + "× ") + v.w + "×" + v.h;
+    sel.appendChild(o);
+  });
+  if (selectedFile) sel.value = selectedFile;
+}
+// Global list of ALL result videos across all source groups (for compare A/B)
+const ALL_RESULTS = [];
+for (const [key, g] of Object.entries(GROUPS)) {
+  g.results.forEach((r) => ALL_RESULTS.push(Object.assign({ group: key, label: g.label }, r)));
+}
+function syncCompareSelectors() {
+  const srcSel = $("#cmp-source");
+  srcSel.innerHTML = "";
+  for (const [key, g] of Object.entries(GROUPS)) {
+    const o = document.createElement("option");
+    o.value = key;
+    o.textContent = g.label + " source (" + g.source.w + "×" + g.source.h + ")";
+    srcSel.appendChild(o);
+  }
+  srcSel.value = cmpState.source;
+  for (const id of ["#cmp-a", "#cmp-b"]) {
+    const sel = $(id);
+    sel.innerHTML = "";
+    for (const r of ALL_RESULTS) {
+      const o = document.createElement("option");
+      o.value = r.file;
+      o.textContent = r.label + " · " + r.factor + "× (" + r.w + "×" + r.h + ")";
+      sel.appendChild(o);
+    }
+  }
+  $("#cmp-a").value = cmpState.a;
+  $("#cmp-b").value = cmpState.b;
+}
+$("#cmp-source").addEventListener("change", (e) => {
+  cmpState.source = e.target.value;
+  // A/B are independent of the source — keep the current selection
+  syncCompareSelectors(); loadCompare();
+});
+$("#cmp-a").addEventListener("change", (e) => { cmpState.a = e.target.value; loadCompare(); });
+$("#cmp-b").addEventListener("change", (e) => { cmpState.b = e.target.value; loadCompare(); });
+function loadCompare() {
+  const g = GROUPS[cmpState.source];
+  const s = g.source, a = ALL_RESULTS.find((r) => r.file === cmpState.a), b = ALL_RESULTS.find((r) => r.file === cmpState.b);
+  cmpV[0].src = s.file; cmpV[1].src = a.file; cmpV[2].src = b.file;
+  cmpV.forEach((v) => v.currentTime = 0);
+  $("#cmp-p0-name").textContent = "Source (" + g.label + ")";
+  $("#cmp-p1-name").textContent = "A — " + a.label + " · " + a.factor + "×";
+  $("#cmp-p2-name").textContent = "B — " + b.label + " · " + b.factor + "×";
+  $("#cmp-p0-stats").textContent = statsOf(s);
+  $("#cmp-p1-stats").textContent = statsOf(a);
+  $("#cmp-p2-stats").textContent = statsOf(b);
+  cmpEngine.resync();
+}
+/* exaggeration */
+function applyExag() {
+  const b = $("#ex-bright").value / 100, c = $("#ex-contrast").value / 100, s = $("#ex-sat").value / 100;
+  $("#ex-bright-v").textContent = b.toFixed(1); $("#ex-contrast-v").textContent = c.toFixed(1); $("#ex-sat-v").textContent = s.toFixed(1);
+  const f = `brightness(${b}) contrast(${c}) saturate(${s})`;
+  document.querySelectorAll("#cmp-players video").forEach((v) => v.style.filter = f);
+}
+["#ex-bright", "#ex-contrast", "#ex-sat"].forEach((s) => $(s).addEventListener("input", applyExag));
+$("#ex-reset").addEventListener("click", () => {
+  $("#ex-bright").value = 100; $("#ex-contrast").value = 100; $("#ex-sat").value = 100; applyExag();
+});
+/* zoom lens */
+document.querySelectorAll("#cmp-players .vwrap").forEach((wrap) => {
+  const v = wrap.querySelector("video"), lens = wrap.querySelector(".lens"), lctx = lens.getContext("2d");
+  wrap.addEventListener("mousemove", (e) => {
+    const r = wrap.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (v.readyState < 2) return;
+    const scale = 2.4, srcSize = 220 / scale;
+    // map cursor to video coords (object-fit: contain, square container)
+    const vw = v.videoWidth, vh = v.videoHeight, ar = vw / vh;
+    let dw, dh, dx, dy;
+    if (ar >= 1) { dh = r.height; dw = dh * ar; dx = (r.width - dw) / 2; dy = 0; }
+    else { dw = r.width; dh = dw / ar; dx = 0; dy = (r.height - dh) / 2; }
+    const px = Math.min(Math.max((x - dx) / dw, 0), 1) * vw;
+    const py = Math.min(Math.max((y - dy) / dh, 0), 1) * vh;
+    lctx.clearRect(0, 0, lens.width, lens.height);
+    lctx.drawImage(v, px - srcSize / 2, py - srcSize / 2, srcSize, srcSize, 0, 0, lens.width, lens.height);
+    lens.style.display = "block";
+    lens.style.left = Math.min(x - 110, r.width - 220) + "px";
+    lens.style.top = Math.min(y - 110, r.height - 220) + "px";
+  });
+  wrap.addEventListener("mouseleave", () => lens.style.display = "none");
+});
+
+/* ================= WIPE ================= */
+const wipeState = { source: "1mp", a: null, b: null };
+const wipeV = [$("#wipe-va"), $("#wipe-vb")];
+tabVideos.wipe = wipeV;
+const wipeEngine = makeSyncEngine(() => wipeV, (t) => wipeTick(t));
+const wipeTick = bindTransport(wipeEngine, $("#wipe-play"), $("#wipe-scrub"), $("#wipe-time"), $("#wipe-loop"));
+function syncWipeSelectors() {
+  fillSelect($("#wipe-source"), wipeState.source, false, wipeState.source);
+  fillSelect($("#wipe-a"), wipeState.source, false, wipeState.a);
+  fillSelect($("#wipe-b"), wipeState.source, false, wipeState.b);
+}
+$("#wipe-source").addEventListener("change", (e) => {
+  wipeState.source = e.target.value;
+  const g = GROUPS[wipeState.source];
+  wipeState.a = g.results[0].file;
+  wipeState.b = g.results[Math.min(1, g.results.length - 1)].file;
+  syncWipeSelectors(); loadWipe();
+});
+$("#wipe-a").addEventListener("change", (e) => { wipeState.a = e.target.value; loadWipe(); });
+$("#wipe-b").addEventListener("change", (e) => { wipeState.b = e.target.value; loadWipe(); });
+$("#wipe-swap").addEventListener("click", () => {
+  const t = wipeState.a; wipeState.a = wipeState.b; wipeState.b = t;
+  syncWipeSelectors(); loadWipe();
+});
+function loadWipe() {
+  const g = GROUPS[wipeState.source];
+  const a = g.results.find((r) => r.file === wipeState.a), b = g.results.find((r) => r.file === wipeState.b);
+  wipeV[0].src = a.file; wipeV[1].src = b.file;
+  wipeV.forEach((v) => v.currentTime = 0);
+  $("#wipe-la").textContent = "◂ " + a.factor + "×";
+  $("#wipe-lb").textContent = b.factor + "× ▸";
+  wipeEngine.resync();
+}
+/* drag the split line */
+(function initWipeDrag() {
+  const wrap = $("#wipe-wrap"), line = $("#wipe-line");
+  let dragging = false;
+  const setPos = (clientX) => {
+    const r = wrap.getBoundingClientRect();
+    const pct = Math.min(100, Math.max(0, ((clientX - r.left) / r.width) * 100));
+    line.style.left = pct + "%";
+    $("#wipe-va").style.clipPath = `inset(0 0 0 ${pct}%)`;
+  };
+  line.addEventListener("pointerdown", (e) => { dragging = true; line.setPointerCapture(e.pointerId); });
+  wrap.addEventListener("pointerdown", (e) => { if (e.target === line) return; dragging = true; setPos(e.clientX); });
+  window.addEventListener("pointermove", (e) => { if (dragging) setPos(e.clientX); });
+  window.addEventListener("pointerup", () => dragging = false);
+})();
+
+/* ================= GHOST ================= */
+const ghostState = { source: "1mp", base: null, top: null };
+const ghostBaseV = document.createElement("video");
+const ghostTopV = document.createElement("video");
+[ghostBaseV, ghostTopV].forEach((v) => { v.preload = "auto"; v.playsInline = true; });
+tabVideos.ghost = [ghostBaseV, ghostTopV];
+const ghostCanvas = $("#ghost-canvas"), gctx = ghostCanvas.getContext("2d");
+const ghostEngine = makeSyncEngine(() => [ghostBaseV, ghostTopV], (t) => { ghostTick(t); drawGhost(); });
+const ghostTick = bindTransport(ghostEngine, $("#ghost-play"), $("#ghost-scrub"), $("#ghost-time"), $("#ghost-loop"));
+function syncGhostSelectors() {
+  fillSelect($("#ghost-source"), ghostState.source, false, ghostState.source);
+  fillSelect($("#ghost-base"), ghostState.source, false, ghostState.base);
+  fillSelect($("#ghost-top"), ghostState.source, false, ghostState.top);
+}
+$("#ghost-source").addEventListener("change", (e) => {
+  ghostState.source = e.target.value;
+  const g = GROUPS[ghostState.source];
+  ghostState.base = g.results[0].file;
+  ghostState.top = g.results[Math.min(1, g.results.length - 1)].file;
+  syncGhostSelectors(); loadGhost();
+});
+$("#ghost-base").addEventListener("change", (e) => { ghostState.base = e.target.value; loadGhost(); });
+$("#ghost-top").addEventListener("change", (e) => { ghostState.top = e.target.value; loadGhost(); });
+$("#ghost-swap").addEventListener("click", () => {
+  const t = ghostState.base; ghostState.base = ghostState.top; ghostState.top = t;
+  syncGhostSelectors(); loadGhost();
+});
+$("#ghost-op").addEventListener("input", drawGhost);
+function loadGhost() {
+  const g = GROUPS[ghostState.source];
+  const base = g.results.find((r) => r.file === ghostState.base), top = g.results.find((r) => r.file === ghostState.top);
+  ghostBaseV.src = base.file; ghostTopV.src = top.file;
+  ghostBaseV.currentTime = 0; ghostTopV.currentTime = 0;
+  drawGhost();
+}
+function drawGhost() {
+  const b = ghostBaseV, t = ghostTopV;
+  if (b.readyState < 2 || t.readyState < 2) return;
+  const w = ghostCanvas.width, h = ghostCanvas.height;
+  gctx.globalAlpha = 1;
+  gctx.drawImage(b, 0, 0, w, h);
+  gctx.globalAlpha = $("#ghost-op").value / 100;
+  gctx.drawImage(t, 0, 0, w, h);
+  gctx.globalAlpha = 1;
+}
+/* redraw while playing */
+(function ghostLoop() {
+  if (ghostEngine.playing) { drawGhost(); }
+  requestAnimationFrame(ghostLoop);
+})();
+[ghostBaseV, ghostTopV].forEach((v) => v.addEventListener("loadeddata", drawGhost));
+
+/* ================= KEYBOARD ================= */
+document.addEventListener("keydown", (e) => {
+  if (modal.classList.contains("open") || lightbox.classList.contains("open")) return;
+  const active = document.querySelector(".tab.active").id;
+  let engine = null;
+  if (active === "tab-compare") engine = cmpEngine;
+  if (active === "tab-wipe") engine = wipeEngine;
+  if (active === "tab-ghost") engine = ghostEngine;
+  if (!engine) return;
+  if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;
+  if (e.code === "Space") {
+    e.preventDefault();
+    engine.playing = !engine.playing;
+    const btn = active === "tab-compare" ? $("#cmp-play") : active === "tab-wipe" ? $("#wipe-play") : $("#ghost-play");
+    btn.textContent = engine.playing ? "⏸ Pause" : "▶ Play";
+  } else if (e.key === "ArrowLeft") { engine.step(e.shiftKey ? -10 : -1); }
+  else if (e.key === "ArrowRight") { engine.step(e.shiftKey ? 10 : 1); }
+  else if (e.key.toLowerCase() === "l") {
+    engine.loop = !engine.loop;
+    const btn = active === "tab-compare" ? $("#cmp-loop") : active === "tab-wipe" ? $("#wipe-loop") : $("#ghost-loop");
+    btn.textContent = "🔁 Loop: " + (engine.loop ? "on" : "off");
+  }
+});
+
+/* ================= INIT ================= */
+(function init() {
+  cmpState.a = GROUPS["1mp"].results[0].file;
+  cmpState.b = GROUPS["1mp"].results[1].file;
+  syncCompareSelectors(); loadCompare();
+  wipeState.a = GROUPS["1mp"].results[0].file;
+  wipeState.b = GROUPS["1mp"].results[1].file;
+  syncWipeSelectors(); loadWipe();
+  ghostState.base = GROUPS["1mp"].results[0].file;
+  ghostState.top = GROUPS["1mp"].results[1].file;
+  syncGhostSelectors(); loadGhost();
+  applyExag();
+})();
+</script>
+</body>
+</html>
