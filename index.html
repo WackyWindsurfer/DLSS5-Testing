@@ -72,10 +72,11 @@
   .group { margin-bottom: 30px; }
   .group-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
   .group-head .res { color: var(--accent2); font-size: 14px; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .cards { display: flex; gap: 12px; }
   .card {
     background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
     overflow: hidden; cursor: pointer; transition: transform .12s, border-color .12s;
+    flex: 1 1 0; min-width: 0;
   }
   .card:hover { transform: translateY(-3px); border-color: var(--accent); }
   .card .thumb { position: relative; width: 100%; aspect-ratio: 1/1; background: #000; }
