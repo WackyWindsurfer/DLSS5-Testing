@@ -36,8 +36,9 @@ scene_change_threshold 0.24). **Only `upscaling_mode` varied.**
 ### 1. Overview
 - Reference image and workflow screenshot (click either to open the lightbox).
 - The full settings table used for all renders.
-- A grid of cards grouped by source resolution, sorted by upscaling factor
-  (low → high). Each card shows a live first-frame thumbnail, the factor,
+- A row of cards per source resolution, sorted by upscaling factor
+  (low → high) — all cards of the same MP size sit on one horizontal line.
+  Each card shows a live first-frame thumbnail, the factor,
   output resolution, and file size.
 - **Click a card** → modal player with scrubber, speed control, loop, and
   fullscreen. "Use in 3-Way Compare" drops that render into slot A.
@@ -55,9 +56,11 @@ scene_change_threshold 0.24). **Only `upscaling_mode` varied.**
 - **Zoom lens:** hover over any player for a 2.4× magnifier.
 
 ### 3. A/B Wipe
-Two renders in one frame with a **draggable split line** (click anywhere on
-the frame, or drag the blue handle). Best for spotting detail and structure
-differences between two upscaling modes.
+Two videos in one frame with a **draggable split line** (click anywhere on
+the frame, or drag the blue handle). A (left of the line) and B (right of
+the line) each offer **all 17 videos** — the 3 sources plus all 14 result
+renders — labeled clearly, e.g. `2 MP source (1440×1440)` or
+`2 MP · 3× (4320×4320)`. Best for spotting detail and structure differences.
 
 ### 4. Ghost Overlay
 Render A blended over render B on a canvas with an **opacity slider**
